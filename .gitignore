@@ -3,5 +3,6 @@
 .credentials
 .venv
 *.pyc
+*.swp
 *.egg-info
 
