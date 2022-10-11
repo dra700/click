@@ -1,0 +1,121 @@
+default:
+  project_id: EXAMPLE
+  project_name: 예제
+  developer: dra700
+  infra_admin: dra700
+  watchers:
+   - dra700
+
+example:
+  project_id: EXAMPLE
+  project_name: 예제
+  developer: dra700
+  infra_admin: dra700
+  watchers:
+   - dra700
+   - hsr2367
+
+#EXAMPLE2는 duedate 필드가 없는 프로젝트를 테스트할 때 사용한다.
+example2:
+  project_id: EXAMPLE2
+  project_name: 예제
+  developer: dra700
+  infra_admin: dra700
+  watchers:
+    - dra700
+
+golf:
+  project_id : GOLFINFRA
+  project_name : 골프임팩트
+  developer : dlrmsdud34 #이근영
+  infra_admin : dra700
+  watchers : 
+   - dlrmsdud34
+   - withyou
+   - dra700
+
+base:
+  project_id : BASEINFRA
+  project_name : 베이스볼클래시
+  developer : hanpsy #한상이
+  infra_admin : dra700
+  watchers :
+    - ijisia
+
+koh:
+  project_id : KOHINFRA
+  project_name : 킹덤오브히어로
+  developer : eunseok #이은석
+  infra_admin : dra700
+  watchers   : chkim716
+
+pss:
+  project_id : PSSINFRA
+  project_name : 프로젝트SS
+  developer : jgkim #김준권
+  infra_admin : dra700
+  watchers : 
+  - cross090720
+  - rntdudwns 
+
+sbsweb:
+  project_id : SBSWEBINFRA
+  project_name : SBS웹공통
+  developer : csicost 
+  infra_admin : dra700
+  watchers :
+    - dra700 
+
+payl:
+  project_id : PAYLINFRA
+  project_name : 페이레터
+  developer : scarfrompayletter 
+  infra_admin : dra700
+  watchers : xcoolukx,nrjin1224,jmlim
+
+cgi:
+  project_id : CGIINFRA
+  project_name : 크립토골프
+  developer : ych
+  infra_admin : dra700
+  watchers : 
+    - dra700
+
+mbrown2:
+  project_id : BD2INF
+  project_name : 브라운더스트2
+  developer : hsr2367
+  infra_admin : hsr2367
+  watchers : 
+    - hsr2367
+
+gb:
+  project_id : GBINFRA
+  project_name : GB
+  developer : eunseok
+  infra_admin : dra700
+  watchers :
+    - dra700
+    - eunseok
+
+orario:
+  project_id : ORARIOINF
+  project_name : 오라리오
+  developer : chjun
+  infra_admin : chjun
+  watchers :
+    - windian7
+    - chjun
+    - garibaldi
+    - withyou
+
+EOS:
+  project_id : EOSINFRA
+  project_name : EOS
+  developer : eos.yjw9867
+  infra_admin : hsr2367
+  watchers :
+    - windian7
+    - hsr2367
+    - eos.yjw9867
+    - king1101kr
