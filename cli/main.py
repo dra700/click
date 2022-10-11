@@ -21,7 +21,7 @@ def cli(**kwargs):
     pass
 
 @cli.group()
-@click.option('-k', '--key', 'key', type=str, required=True, help='Issue Key')
+@click.argument('key')
 @click.pass_context
 def issue(ctx, key):
     ctx.obj = key
@@ -33,11 +33,17 @@ def get(key):
     click.echo(json.dumps(issue))
 
 @issue.command()
-@click.option('-f', '--field', 'field', type=str, required=True, help='Field')
+@click.argument('field', type=str, required=True)
 @click.pass_obj
 def get_field_value(key, field):
     value = jira.issue_field_value(key, field)
     click.echo(json.dumps(value))
+
+@issue.command()
+@click.argument('fields', type=dict, required=True)
+def create(fields):
+    result = jira.issue_create(fields)
+    click.echo(json.dumps(result))
 
 if __name__ == '__main__':
     cli()
