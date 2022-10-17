@@ -1,10 +1,19 @@
-from distutils.command.config import config
+#/!/usr/bin/env python3
+#coding=utf-8
+
+from gc import callbacks
 import click
 import configparser
+import jinja2
 import json
 import yaml
+from json import dumps
+from yaml import safe_load
 from atlassian import Jira
 
+def abort_if_false(ctx, param, value):
+    if not value:
+        ctx.abort()
 try:
     cred = configparser.RawConfigParser(allow_no_value=True)
     cred.read('.credentials')
@@ -15,18 +24,9 @@ try:
 except Exception as e:
     print(e)
 
-try:
-    with open('project.yaml', 'r') as projct_config:
-        data = yaml.safe_load(project_config)
-        config = data[project]
-        watchers = list(config['watchers'])
-except Exception as e:
-    print(e)
-
 jira = Jira(url, username, password)
 
 @click.group()
-@click.pass_context
 def cli(**kwargs):
     pass
 
@@ -46,6 +46,15 @@ def get(key):
         print(e)
 
 @issue.command()
+@click.pass_obj
+@click.option('--yes', is_flag=True, callback=abort_if_false, expose_value=False, prompt='Are you sure delete issue?')
+def delete(key):
+    try:
+        issue = jira.delete_issue(key)
+    except Exception as e:
+        print(e)
+
+@issue.command()
 @click.argument('field', type=str, required=True)
 @click.pass_obj
 def get_field_value(key, field):
@@ -55,20 +64,32 @@ def get_field_value(key, field):
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True))
 @click.option('--project', '-p', 'project', default='default', help='section in project.yaml')
-@click.option('--due-date', '-d', 'duedate', help='due date')
+@click.option('--due-date', '-d', 'duedate', help="set due date when project needs ['YYYY-MM-DD']")
 @click.option('--yaml', 'yaml', is_flag=True, show_default=True, default=True, help='create issue from yaml')
 @click.option('--json', 'json', is_flag=True, show_default=True, default=False, help='create issue from json')
-def create_issue(filename, yaml, json):
-    click.echo(filename)
-    if yaml:
-        try:
-            with open(filename, 'r') as yamlfile:
-                data = yaml.safe_load(yamlfile)
-                
-        click.echo('yaml!')
-    if json:
-        click.echo('json!')
+def create_issue(filename, duedate, project, yaml, json):
+    try:
+        if yaml:
+            with open('project.yaml', 'r') as yamlfile:
+                data = safe_load(yamlfile)
+                config = data[project]
+                watchers = list(config['watchers'])
+                loader = jinja2.FileSystemLoader(searchpath='./')
+                jenv = jinja2.Environment(loader=loader)
+                template = jenv.get_template(filename)
+                rendered_template = template.render(config)
+                fields = safe_load(rendered_template)
 
+                if duedate is not None:
+                    fields.update({'duedate': duedate})
+
+                create_issue = jira.create_issue(fields)
+                click.echo(dumps(create_issue))
+        if json:
+            with open(filename, 'r') as fields:
+                create_issue(fields)
+    except Exception as e:
+        print(e)
 
 if __name__ == '__main__':
     cli()
