@@ -1,7 +1,5 @@
 #/!/usr/bin/env python3
 #coding=utf-8
-
-from gc import callbacks
 import click
 import configparser
 import jinja2
@@ -11,9 +9,14 @@ from json import dumps
 from yaml import safe_load
 from atlassian import Jira
 
+#issue를 delete 할 때 사용할 실패 시 abort fuction
 def abort_if_false(ctx, param, value):
     if not value:
         ctx.abort()
+
+#To Do
+#.credentials 파일을 --config로 선택할 수 있도록 하고
+#default가 아닌 다른 section도 --profile로 선택할 수 있도록 변경 필요
 try:
     cred = configparser.RawConfigParser(allow_no_value=True)
     cred.read('.credentials')
@@ -30,36 +33,23 @@ jira = Jira(url, username, password)
 def cli(**kwargs):
     pass
 
-@cli.group()
-@click.argument('key')
-@click.pass_context
-def issue(ctx, key):
-    ctx.obj = key
-
-@issue.command()
-@click.pass_obj
-def get(key):
+@cli.command()
+@click.argument('key', type=str, required=True)
+def get_issue(key):
     try:
         issue = jira.issue(key)
         click.echo(json.dumps(issue))
     except Exception as e:
         print(e)
 
-@issue.command()
-@click.pass_obj
+@cli.command()
+@click.argument('key', type=str, required=True)
 @click.option('--yes', is_flag=True, callback=abort_if_false, expose_value=False, prompt='Are you sure delete issue?')
 def delete(key):
     try:
         issue = jira.delete_issue(key)
     except Exception as e:
         print(e)
-
-@issue.command()
-@click.argument('field', type=str, required=True)
-@click.pass_obj
-def get_field_value(key, field):
-    value = jira.issue_field_value(key, field)
-    click.echo(json.dumps(value))
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True))
@@ -93,8 +83,3 @@ def create_issue(filename, duedate, project, yaml, json):
 
 if __name__ == '__main__':
     cli()
-
-
-#to do
-#issue에 arg(KEY) 가 없어도 동작할 수 있도록
-#TypeError: create() got multiple values for argument 'fields' 문제 해결
