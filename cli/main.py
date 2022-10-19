@@ -10,8 +10,10 @@ from atlassian import Jira
 
 class Creds:
     try:
+        cred_path = Path.home() / '.jira_cli' / 'credentials'
         cred = configparser.RawConfigParser(allow_no_value=True)
-        cred.read('.credentials')
+        #cred.read('.credentials')
+        cred.read(cred_path)
         cred.sections()
         url = cred.get('default', 'url')
         username = cred.get('default', 'username')
