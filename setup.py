@@ -9,6 +9,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        cli=cli.main:cli
+        jira_cli=cli.main:cli
     ''',
 )
