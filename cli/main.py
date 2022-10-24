@@ -9,19 +9,38 @@ import yaml
 from pathlib import Path
 from atlassian import Jira
 
-class config:
-    try:
-        config_path = Path.home() / '.jira_cli' / 'credentials'
-        config = configparser.RawConfigParser(allow_no_value=True)
-        config.read(config_path)
-        config.sections()
-        url = config.get('default', 'url')
-        username = config.get('default', 'username')
-        password = config.get('default', 'password')
-    except Exception as e:
-        print(e)
+# class config:
+#     try:
+#         config_path = Path.home() / '.jira_cli' / 'credentials'
+#         config = configparser.RawConfigParser(allow_no_value=True)
+#         config.read(config_path)
+#         config.sections()
+#         url = config.get('default', 'url')
+#         username = config.get('default', 'username')
+#         password = config.get('default', 'password')
+#     except Exception as e:
+#         print(e)
 
-jira = Jira(config.url, config.username, config.password)
+# jira = Jira(config.url, config.username, config.password)
+
+class Config:
+    def __init__(self, profile, url, username, password):
+        self.__profile = profile
+        self.__url = url
+        self.__username = username
+        self.__password = password
+    
+    @classmethod
+    def get(cls, profile, config):
+        return cls(profile, config['url'], config['username'], config['password'])
+
+profile = 'default'
+config_path = Path.home() / '.jira_cli' / 'credentials'
+config = configparser.RawConfigParser()
+config.read(config_path)
+#profiles = [Config.get(section, config[section]) for section in config.sections()]
+username = config['default']['username']
+print(username)
 
 #issue를 delete 할 때 사용할 실패 시 abort fuction
 def abort_if_false(ctx, param, value):
@@ -92,7 +111,7 @@ def delete_issue(key):
 def create_issue(filename, duedate, project, input_yaml, input_json):
     try:
         if input_yaml:
-            with open('project.yaml', 'r') as yamlfile:
+            with open('../../project.yaml', 'r') as yamlfile:
                 data = yaml.safe_load(yamlfile)
                 config = data[project]
                 watchers = list(config['watchers'])
