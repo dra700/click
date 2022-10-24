@@ -9,20 +9,19 @@ import yaml
 from pathlib import Path
 from atlassian import Jira
 
-class Creds:
+class config:
     try:
-        cred_path = Path.home() / '.jira_cli' / 'credentials'
-        cred = configparser.RawConfigParser(allow_no_value=True)
-        #cred.read('.credentials')
-        cred.read(cred_path)
-        cred.sections()
-        url = cred.get('default', 'url')
-        username = cred.get('default', 'username')
-        password = cred.get('default', 'password')
+        config_path = Path.home() / '.jira_cli' / 'credentials'
+        config = configparser.RawConfigParser(allow_no_value=True)
+        config.read(config_path)
+        config.sections()
+        url = config.get('default', 'url')
+        username = config.get('default', 'username')
+        password = config.get('default', 'password')
     except Exception as e:
         print(e)
 
-jira = Jira(Creds.url, Creds.username, Creds.password)
+jira = Jira(config.url, config.username, config.password)
 
 #issue를 delete 할 때 사용할 실패 시 abort fuction
 def abort_if_false(ctx, param, value):
