@@ -1,6 +1,7 @@
 #/!/usr/bin/env python3
 #coding=utf-8
 
+import os
 import click
 import configparser
 import jinja2
@@ -9,56 +10,54 @@ import yaml
 from pathlib import Path
 from atlassian import Jira
 
-# class config:
-#     try:
-#         config_path = Path.home() / '.jira_cli' / 'credentials'
-#         config = configparser.RawConfigParser(allow_no_value=True)
-#         config.read(config_path)
-#         config.sections()
-#         url = config.get('default', 'url')
-#         username = config.get('default', 'username')
-#         password = config.get('default', 'password')
-#     except Exception as e:
-#         print(e)
-
-# jira = Jira(config.url, config.username, config.password)
-
-class Config:
-    def __init__(self, profile, url, username, password):
-        self.__profile = profile
-        self.__url = url
-        self.__username = username
-        self.__password = password
-    
-    @classmethod
-    def get(cls, profile, config):
-        return cls(profile, config['url'], config['username'], config['password'])
+class Config(object):
+    def __init__(self, *file_names):
+        parser = configparser.RawConfigParser()
+        parser.optionxform = str
+        found = parser.read(file_names)
+        if not found:
+            raise ValueError('No config file found!')
+        self.__dict__.update(parser.items(profile))
+    def update(self, *filenames, profile, url, username, password):
+        parser = configparser.RawConfigParser()
+        parser.optionxform = str
+        if os.path.isfile(filenames):
+            parser.read_file(open(filenames))
+            parser.read(filenames)
+        if not parser.has_section(profile):
+            parser.add_section(profile)
+        parser.set(profile, 'url', url)
+        parser.set(profile, 'username', username)
+        parser.set(profile, 'password', password)
+#todo url, username, password를 각각 받지 말고 함수 한번에 하나씩 총 3번 호출하는 방식으로 간단하게 변경할 것
 
 profile = 'default'
 config_path = Path.home() / '.jira_cli' / 'credentials'
-config = configparser.RawConfigParser()
-config.read(config_path)
-#profiles = [Config.get(section, config[section]) for section in config.sections()]
-username = config['default']['username']
-print(username)
+config = Config(config_path)
+jira = Jira(config.url, config.username, config.password)
 
 #issue를 delete 할 때 사용할 실패 시 abort fuction
 def abort_if_false(ctx, param, value):
     if not value:
         ctx.abort()
 
+# cli
 @click.group()
 def cli(**kwargs):
     pass
 
-# # configure
-# @cli.command()
-# @click.option('--profile', default='default', help='profile name')
-# @click.option('--username', prompt=True)
-# @click.option('--password', click.prompt=True, hide_input=True, confirmation_prompt=True)
-# def configure(profile):
-#     """create or modify .credentials for jira cli"""
-#     if no
+# configure
+@cli.command()
+@click.option('--profile', default='default', help='profile name')
+@click.option('--url', default='https://jira.neowiz.com', prompt=True, help='Set Jira Site URL')
+@click.option('--username', prompt=True)
+@click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True)
+def configure(filenames, profile, url, username, password):
+    """create or modify .credentials for jira cli"""
+    filenames = config_path
+    Config.update(filenames, profile, url)
+    Config.update(filenames, profile, username)
+    Config.update(filenames, profile, password)
 
 #get issue
 @cli.command()
@@ -83,6 +82,7 @@ def issue_field_value(key, field):
 
 #update issue field
 @cli.command()
+@click.pass_obj
 def update_issue_field(key, fields):
     try:
         result = jira.update_issue_field(key, fields)
