@@ -15,10 +15,12 @@ class Config(object):
         parser = configparser.RawConfigParser()
         parser.optionxform = str
         found = parser.read(filename)
-        if not found:
-            raise ValueError('No config file found!')
-        else:
+        try:
+            if not found:
+                raise ValueError("No config found. run 'jira-cli configure' first")
             self.__dict__.update(parser.items(profile))
+        except ValueError or configparser.NoOptionError or configparser.NoOptionError as e:
+            print(e)
     def update(self, filename, profile, key, value):
         parser = configparser.RawConfigParser()
         parser.optionxform = str
@@ -27,16 +29,17 @@ class Config(object):
             parser.read(filename)
         if not parser.has_section(profile):
             parser.add_section(profile)
-            parser.set(profile, key, value)
-            with open(filename, 'w') as f:
-                parser.write(f)
-                os.chmod(f, )
+        parser.set(profile, key, value)
+        with open(filename, 'w') as f:
+            parser.write(f)
 
 profile = 'default'
 config_path = os.path.join(os.path.expanduser('~'), '.jira_cli', 'credentials') # config path = ~/.jira_cli/credentials
-#config_path = Path.home() / '.jira_cli' / 'credentials'
-config = Config(config_path)
-jira = Jira(config.url, config.username, config.password)
+try:
+    config = Config(config_path)
+    jira = Jira(config.url, config.username, config.password)
+except AttributeError as e:
+    print(e)
 
 #issue를 delete 할 때 사용할 실패 시 abort fuction
 def abort_if_false(ctx, param, value):
@@ -56,9 +59,13 @@ def cli(**kwargs):
 @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True)
 def configure(profile, url, username, password):
     '''create or modify ~/.jira_cli/credentials for jira cli'''
+    config = Config(config_path)
     d = {'url': url, 'username': username, 'password': password}
-    for key, value in d.items():
-        result = Config.update(config_path, profile, key, value)
+    try:
+        for key, value in d.items():
+            config.update(config_path, profile, key, value)
+    except Exception as e:
+        print(e)
 
 #get issue
 @cli.command()
