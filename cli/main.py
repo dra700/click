@@ -189,21 +189,30 @@ def delete_issue(profile, key):
 @click.option('--input-yaml', 'input_yaml', is_flag=True, show_default=True, default=True, help='create issue from yaml')
 @click.option('--input-json', 'input_json', is_flag=True, show_default=True, default=False, help='create issue from json')
 @click.option('--output-json', 'output_json', is_flag=True, show_default=True, default=False, help='when create issue from yaml, print json input to jira rest api')
-@click.argument('filename', type=click.Path(exists=True))
-def create_issue(profile, filename, duedate, project, input_yaml, input_json, output_json):
+#@click.argument('filename', type=click.Path(exists=True))
+@click.argument('filenames', nargs=-1, type=click.Path(exists=True))
+#@click.argument('filenames', nargs=-1, type=click.File('rb'))
+def create_issue(profile, filenames, duedate, project, input_yaml, input_json, output_json):
     '''create issue from yaml template or json file'''
     config = Config(profile, config_path)
     jira = Jira(config.url, config.username, config.password)
     if input_yaml:
         git_root = get_git_root('.')
         envfile = os.path.join(git_root, 'project.yaml')
-        fields = create_fields_from_yaml(project, duedate, envfile, filename)
+        for filename in filenames:
+            fields = create_fields_from_yaml(project, duedate, envfile, filename)
+            create_issue = jira.create_issue(fields)
+            click.echo(json.dumps(create_issue))
+        # fields = create_fields_from_yaml(project, duedate, envfile, filename)
+        # create_issue = jira.create_issue(fields)
+        # click.echo(json.dumps(create_issue))
+
     if input_json:
         fields = create_fields_from_json(filename)
-    create_issue = jira.create_issue(fields)
-    click.echo(json.dumps(create_issue))
-    if output_json:
-        print(json.dumps(fields))
+        create_issue = jira.create_issue(fields)
+        click.echo(json.dumps(create_issue))
+        if output_json:
+            print(json.dumps(fields))
 
 if __name__ == '__main__':
     cli()

@@ -1,0 +1,10 @@
+summary: {{project_name}} example2
+project:
+  key: {{project_id}}
+issuetype:
+  name: Task
+assignee:
+  name: {{infra_admin}}
+description: |
+  
+  example2 description
