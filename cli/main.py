@@ -66,7 +66,7 @@ def get_git_root(path):
     return result
 
 #yaml 파일을 jinja templating
-def create_fields_from_yaml(project, duedate, envfile, template_file):
+def create_fields_from_yaml(project, envfile, template_file):
     with open(envfile, 'r') as env_file:
         env = yaml.safe_load(env_file)
         config = env[project]
@@ -76,8 +76,6 @@ def create_fields_from_yaml(project, duedate, envfile, template_file):
         template = jenv.get_template(template_file)
         rendered_template = template.render(config)
         fields = yaml.safe_load(rendered_template)
-        if duedate is not None:
-            fields.update({'duedate': duedate})
         return fields
 
 #json 파일을 fields 로 return
@@ -185,14 +183,12 @@ def delete_issue(profile, key):
 @cli.command()
 @click.option('--profile', default='default', help='profile name')
 @click.option('--project', '-p', 'project', default='default', help='section in project.yaml')
-@click.option('--due-date', '-d', 'duedate', help="set due date when project needs due date ['YYYY-MM-DD']")
+@click.option('--add-field', 'add_field', type=(str, str), default=None, multiple=True, help="add field like --add-field duedate '2022-10-31'")
 @click.option('--input-yaml', 'input_yaml', is_flag=True, show_default=True, default=True, help='create issue from yaml')
 @click.option('--input-json', 'input_json', is_flag=True, show_default=True, default=False, help='create issue from json')
 @click.option('--output-json', 'output_json', is_flag=True, show_default=True, default=False, help='when create issue from yaml, print json input to jira rest api')
-#@click.argument('filename', type=click.Path(exists=True))
 @click.argument('filenames', nargs=-1, type=click.Path(exists=True))
-#@click.argument('filenames', nargs=-1, type=click.File('rb'))
-def create_issue(profile, filenames, duedate, project, input_yaml, input_json, output_json):
+def create_issue(profile, filenames, add_field, project, input_yaml, input_json, output_json):
     '''create issue from yaml template or json file'''
     config = Config(profile, config_path)
     jira = Jira(config.url, config.username, config.password)
@@ -200,12 +196,12 @@ def create_issue(profile, filenames, duedate, project, input_yaml, input_json, o
         git_root = get_git_root('.')
         envfile = os.path.join(git_root, 'project.yaml')
         for filename in filenames:
-            fields = create_fields_from_yaml(project, duedate, envfile, filename)
+            fields = create_fields_from_yaml(project, envfile, filename)
+            if add_field is not None:
+                d = dict(add_field)
+                fields.update(d)
             create_issue = jira.create_issue(fields)
             click.echo(json.dumps(create_issue))
-        # fields = create_fields_from_yaml(project, duedate, envfile, filename)
-        # create_issue = jira.create_issue(fields)
-        # click.echo(json.dumps(create_issue))
 
     if input_json:
         fields = create_fields_from_json(filename)
