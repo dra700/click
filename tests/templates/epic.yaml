@@ -1,0 +1,10 @@
+summary: {{project_name}} epic example
+project:
+  key: {{project_id}}
+issuetype:
+  name: Epic
+customfield_10004: {{project_name}} epic name
+assignee:
+  name: {{infra_admin}}
+description: |
+  example epic description

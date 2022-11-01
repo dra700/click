@@ -153,13 +153,15 @@ def issue_field_value(profile, key, field):
 #update issue field
 @cli.command()
 @click.option('--profile', default='default', help='profile name')
+@click.option('--add-field', 'add_field', type=(str, str), default=None, multiple=True, required=True, help="add field like --add-field customfield_10002 EXAMPLE-735")
 @click.argument('key', type=str, required=True)
-def update_issue_field(profile, key, fields):
+def update_issue_field(profile, key, add_field):
     '''update issue field'''
     config = Config(profile, config_path)
     jira = Jira(config.url, config.username, config.password)
+    d = dict(add_field)
     try:
-        result = jira.update_issue_field(key, fields)
+        result = jira.update_issue_field(key, d)
         click.echo(json.dumps(result))
     except Exception as e:
         print(e)
@@ -179,36 +181,40 @@ def delete_issue(profile, key):
     except Exception as e:
         print(e)
 
-#create issue
+#create issue via template
 @cli.command()
 @click.option('--profile', default='default', help='profile name')
 @click.option('--project', '-p', 'project', default='default', help='section in project.yaml')
-@click.option('--add-field', 'add_field', type=(str, str), default=None, multiple=True, help="add field like --add-field duedate '2022-10-31'")
-@click.option('--input-yaml', 'input_yaml', is_flag=True, show_default=True, default=True, help='create issue from yaml')
-@click.option('--input-json', 'input_json', is_flag=True, show_default=True, default=False, help='create issue from json')
+@click.option('--add-field', 'add_field', type=(str, str), default=None, multiple=True, help="add field like --add-field duedate 2022-10-31")
 @click.option('--output-json', 'output_json', is_flag=True, show_default=True, default=False, help='when create issue from yaml, print json input to jira rest api')
 @click.argument('filenames', nargs=-1, type=click.Path(exists=True))
-def create_issue(profile, filenames, add_field, project, input_yaml, input_json, output_json):
-    '''create issue from yaml template or json file'''
+def create_issue(profile, filenames, add_field, project, output_json):
+    '''create issue via yaml template files'''
     config = Config(profile, config_path)
     jira = Jira(config.url, config.username, config.password)
-    if input_yaml:
-        git_root = get_git_root('.')
-        envfile = os.path.join(git_root, 'project.yaml')
-        for filename in filenames:
-            fields = create_fields_from_yaml(project, envfile, filename)
-            if add_field is not None:
-                d = dict(add_field)
-                fields.update(d)
-            create_issue = jira.create_issue(fields)
-            click.echo(json.dumps(create_issue))
+    git_root = get_git_root('.')
+    envfile = os.path.join(git_root, 'project.yaml')
+    for filename in filenames:
+        fields = create_fields_from_yaml(project, envfile, filename)
+        if add_field is not None:
+            d = dict(add_field)
+            fields.update(d)
+        create_issue = jira.create_issue(fields)
+        click.echo(create_issue['key'])
 
-    if input_json:
+#create issue via json
+@cli.command()
+@click.option('--profile', default='default', help='profile name')
+@click.argument('filenames', nargs=-1, type=click.Path(exists=True))
+def create_issue_from_json(profile, filenames):
+    '''create issue via json files'''
+    config = Config(profile, config_path)
+    jira = Jira(config.url, config.username, config.password)
+    for filename in filenames:
         fields = create_fields_from_json(filename)
         create_issue = jira.create_issue(fields)
         click.echo(json.dumps(create_issue))
-        if output_json:
-            print(json.dumps(fields))
+
 
 if __name__ == '__main__':
     cli()
