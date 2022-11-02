@@ -34,7 +34,7 @@ class Config(object):
         parser.read(filename)
         self.__dict__.update(parser.items(profile))
 
-#config 파일을 만들 때 사용하는 함수. Config class에 구현하려 했으나 __init__에서 config file이 없을 경우 더 이상 실행되지 않도록 처리해야 하기 때문에 configure를 실행할 수 없어 함수 분리함 
+#config 파일을 만들 때 사용하는 함수. Config class에 구현하려 했으나 __init__에서 config file이 없을 경우 더 이상 실행되지 않도록 처리해야 하기 때문에 configure를 실행할 수 없어 분리함 
 def write_config(config_path, profile, k, v):
     try:
         parser = configparser.ConfigParser(interpolation=None)
@@ -66,9 +66,9 @@ def get_git_root(path):
     return result
 
 #yaml 파일을 jinja templating
-def create_fields_from_yaml(project, envfile, template_file):
-    with open(envfile, 'r') as env_file:
-        env = yaml.safe_load(env_file)
+def create_fields_from_yaml(project, env_file, template_file):
+    with open(env_file, 'r') as envfile:
+        env = yaml.safe_load(envfile)
         config = env[project]
         watchers = list(config['watchers'])
         loader = jinja2.FileSystemLoader(searchpath='./')
@@ -177,7 +177,6 @@ def delete_issue(profile, key):
     jira = Jira(config.url, config.username, config.password)
     try:
         issue = jira.delete_issue(key)
-        click.echo(json.dumps(issue))
     except Exception as e:
         print(e)
 
@@ -213,8 +212,7 @@ def create_issue_from_json(profile, filenames):
     for filename in filenames:
         fields = create_fields_from_json(filename)
         create_issue = jira.create_issue(fields)
-        click.echo(json.dumps(create_issue))
-
+        click.echo(create_issue['key'])
 
 if __name__ == '__main__':
     cli()
