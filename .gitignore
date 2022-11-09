@@ -1,6 +1,7 @@
 .DS_Store/
 .vscode/
 .credentials
+build/
 .venv
 *.pyc
 *.swp
